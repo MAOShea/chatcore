@@ -10,6 +10,31 @@
 		27C12B032E21624700017A27 /* libChatCore.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libChatCore.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		27C9AC582E22646500EA678F /* Exceptions for "Sources" folder in "ChatCore" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/ChatMessage.swift,
+				Models/StructuredResponse.swift,
+				Services/AIService.swift,
+				ViewModels/ChatViewModel.swift,
+				Views/ChatBubble.swift,
+			);
+			target = 27C12B022E21624700017A27 /* ChatCore */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		27C12B0A2E21636000017A27 /* Sources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				27C9AC582E22646500EA678F /* Exceptions for "Sources" folder in "ChatCore" target */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		27C12B012E21624700017A27 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -24,6 +49,7 @@
 		27C12AFA2E21624700017A27 = {
 			isa = PBXGroup;
 			children = (
+				27C12B0A2E21636000017A27 /* Sources */,
 				27C12B042E21624700017A27 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -239,6 +265,7 @@
 				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -252,6 +279,7 @@
 				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
