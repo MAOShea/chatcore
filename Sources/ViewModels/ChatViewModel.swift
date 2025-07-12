@@ -22,7 +22,7 @@ public class ChatViewModel: ObservableObject {
     @Published public var showingSaveDialog = false
     @Published public var javascriptToSave: String = ""
     
-    private let aiService = AIService()
+    private let aiService: any AIServiceProtocol
     private var lastSuccessfulSavePath: String?
     
     // MARK: - Widget State Management
@@ -30,8 +30,13 @@ public class ChatViewModel: ObservableObject {
     /// Current widget code/state
     @Published var currentWidgetCode: String = ""
     
+    public init(aiService: any AIServiceProtocol) {
+        self.aiService = aiService
+    }
+    
     public init() {
-        // Default initializer
+        // Default initializer - will be removed once apps are updated
+        fatalError("Please use init(aiService:) instead")
     }
     
     /// Track if we have a current widget
