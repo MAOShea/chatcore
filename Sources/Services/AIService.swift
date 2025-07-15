@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 public protocol AIServiceProtocol: ObservableObject, Sendable {
     var isLoading: Bool { get }
     var lastError: String? { get }
