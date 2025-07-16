@@ -48,12 +48,14 @@ public class ChatViewModel: ObservableObject {
         print("🚀 ChatViewModel: Booting up chat with widget designer role")
         
  
-        // Add the role message to history
+        // Add the role message to history - DEFER THIS UPDATE
         let roleMessage = ChatMessage(
             content: firstPrompt,
             isUser: true,
             timestamp: Date())
-        conversationHistory.append(roleMessage)
+        DispatchQueue.main.async {
+            self.conversationHistory.append(roleMessage)
+        }
         
         // Send the role prompt to AI
         Task {
@@ -70,11 +72,9 @@ public class ChatViewModel: ObservableObject {
         let trimmedInput = userInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInput.isEmpty else { return }
         
-        // Add user message to history
+        // Add user message to history and clear input
         let userMessage = ChatMessage(content: trimmedInput, isUser: true, timestamp: Date())
         conversationHistory.append(userMessage)
-        
-        // Clear input
         userInput = ""
         
         // Send to AI
