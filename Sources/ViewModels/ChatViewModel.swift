@@ -74,8 +74,11 @@ public class ChatViewModel: ObservableObject {
         
         // Add user message to history and clear input
         let userMessage = ChatMessage(content: trimmedInput, isUser: true, timestamp: Date())
-        conversationHistory.append(userMessage)
-        userInput = ""
+        print("🔧 DEBUG: About to modify conversationHistory (sendMessage)")
+        DispatchQueue.main.async {
+            self.conversationHistory.append(userMessage)
+            self.userInput = ""
+        }
         
         // Send to AI
         Task {
@@ -111,6 +114,7 @@ public class ChatViewModel: ObservableObject {
         
         // Add user message to history (show original prompt, not enhanced)
         let userMessage = ChatMessage(content: basePrompt, isUser: true, timestamp: Date())
+        print("🔧 DEBUG: About to modify conversationHistory (sendStructuredMessage)")
         conversationHistory.append(userMessage)
         
         // Send structured prompt to AI with context management
@@ -252,13 +256,19 @@ public class ChatViewModel: ObservableObject {
     /// Send message to AI (simplified - no context management)
     private func sendToAI(_ input: String) async {
         print("🔄 ChatViewModel: Starting AI request")
-        isLoading = true
-        lastError = nil
+        print("🔧 DEBUG: About to modify isLoading (sendToAI start)")
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.lastError = nil
+        }
         
         if let response = await aiService.sendMessage(input) {
             print("✅ ChatViewModel: AI response received, adding to conversation")
             let aiMessage = ChatMessage(content: response, isUser: false, timestamp: Date())
-            conversationHistory.append(aiMessage)
+            print("🔧 DEBUG: About to modify conversationHistory (sendToAI success)")
+            DispatchQueue.main.async {
+                self.conversationHistory.append(aiMessage)
+            }
             
             // Log structured content if found
             if aiMessage.hasStructuredContent {
@@ -276,10 +286,16 @@ public class ChatViewModel: ObservableObject {
                 isUser: false,
                 timestamp: Date()
             )
-            conversationHistory.append(errorMessage)
+            print("🔧 DEBUG: About to modify conversationHistory (sendToAI error)")
+            DispatchQueue.main.async {
+                self.conversationHistory.append(errorMessage)
+            }
         }
         
-        isLoading = false
+        print("🔧 DEBUG: About to modify isLoading (sendToAI end)")
+        DispatchQueue.main.async {
+            self.isLoading = false
+        }
         print("🔄 ChatViewModel: AI request completed")
     }
 } 
