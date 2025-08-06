@@ -17,6 +17,7 @@
 				Models/ChatMessage.swift,
 				Models/StructuredResponse.swift,
 				Services/AIService.swift,
+				Services/FilePickerUtility.swift,
 				ViewModels/ChatViewModel.swift,
 				Views/ChatBubble.swift,
 			);

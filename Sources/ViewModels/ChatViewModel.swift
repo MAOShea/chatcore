@@ -24,14 +24,16 @@ public class ChatViewModel: ObservableObject {
     
     private let aiService: any AIServiceProtocol
     private var lastSuccessfulSavePath: String?
+    private let disableToolCallDetection: Bool
     
     // MARK: - Widget State Management
     
     /// Current widget code/state
     @Published var currentWidgetCode: String = ""
     
-    public init(aiService: any AIServiceProtocol) {
+    public init(aiService: any AIServiceProtocol, disableToolCallDetection: Bool = false) {
         self.aiService = aiService
+        self.disableToolCallDetection = disableToolCallDetection
     }
     
     public init() {
@@ -142,6 +144,50 @@ public class ChatViewModel: ObservableObject {
         }
     }
     
+    private func checkForToolCall(from response: String) async {
+        if disableToolCallDetection {
+            print("🔍 ChatViewModel: Tool call detection disabled, skipping")
+            return
+        }
+        
+        print("🔍 ChatViewModel: Checking for tool call in response")
+        
+        // Check if the response indicates a tool was called
+        if response.contains("widget") && (response.contains("created") || response.contains("generated")) {
+            print("🎯 ChatViewModel: Detected tool call, showing save dialog")
+            await showToolGeneratedFile()
+        } else {
+            print("🔍 ChatViewModel: No tool call detected in response")
+        }
+    }
+    
+    private func showToolGeneratedFile() async {
+        print("📝 ChatViewModel: Showing save dialog for tool-generated file")
+        
+        // For now, we'll show a placeholder - the actual JSX content would need to be passed from the tool
+        let placeholderJSX = """
+        // Tool-generated Übersicht widget
+        // This is a placeholder - the actual JSX content should come from the tool
+        import { css } from 'uebersicht';
+        
+        const widget = () => {
+            return (
+                <div>
+                    <h1>Hello World</h1>
+                </div>
+            );
+        };
+        
+        export default widget;
+        """
+        
+        await MainActor.run {
+            self.javascriptToSave = placeholderJSX
+            self.currentWidgetCode = placeholderJSX
+            self.showingSaveDialog = true
+        }
+    }
+    
     private func generateWidgetFile(javascript: String) async {
         print("📝 ChatViewModel: Generating widget file")
         print("📝 ChatViewModel: JavaScript content length: \(javascript.count)")
@@ -156,54 +202,13 @@ public class ChatViewModel: ObservableObject {
     }
     
     public func saveWidgetFile() {
-        // If we have a previously successful save path, try that first
-        if let lastPath = lastSuccessfulSavePath {
-            let lastURL = URL(fileURLWithPath: lastPath)
-            do {
-                try javascriptToSave.write(to: lastURL, atomically: true, encoding: .utf8)
-                print("✅ ChatViewModel: Widget file updated using previous path!")
-                print("📁 File location: \(lastURL.path)")
-                
-                // Success - no need to show alert
-                DispatchQueue.main.async {
-                    self.lastError = nil
-                    self.showingAlert = false
-                }
-                return
-            } catch {
-                print("⚠️ ChatViewModel: Previous path save failed: \(error)")
-            }
-        }
-        
-        // Try the default widgets folder
-        let übersichtWidgetsPath = "\(NSHomeDirectory())/Library/Application Support/Übersicht/widgets"
-        let directURL = URL(fileURLWithPath: übersichtWidgetsPath).appendingPathComponent("index.jsx")
-        
-        do {
-            try javascriptToSave.write(to: directURL, atomically: true, encoding: .utf8)
-            print("✅ ChatViewModel: Widget file updated directly in Übersicht folder!")
-            print("📁 File location: \(directURL.path)")
-            
-            // Remember this successful path
-            DispatchQueue.main.async {
-                self.lastSuccessfulSavePath = directURL.path
-            }
-            
-            // Success - no need to show alert
-            DispatchQueue.main.async {
-                self.lastError = nil
-                self.showingAlert = false
-            }
-            return
-        } catch {
-            print("⚠️ ChatViewModel: Direct save failed, showing file picker: \(error)")
-        }
-        
-        // If direct save fails, show the file picker
+        print("🔧 DEBUG: saveWidgetFile called")
+        // Always show the file picker - no automatic fallback
         showFilePicker()
     }
     
     private func showFilePicker() {
+        print("🔧 DEBUG: showFilePicker called")
         let savePanel = NSSavePanel()
         savePanel.title = "Save Widget File"
         savePanel.nameFieldStringValue = "index.jsx"
@@ -215,8 +220,19 @@ public class ChatViewModel: ObservableObject {
         let übersichtWidgetsPath = "\(NSHomeDirectory())/Library/Application Support/Übersicht/widgets"
         savePanel.directoryURL = URL(fileURLWithPath: übersichtWidgetsPath)
         
-        let javascriptContent = javascriptToSave
-        savePanel.begin { [weak self] response in
+        // Get the current window to present the save panel
+        guard let window = NSApplication.shared.windows.first else {
+            print("❌ ChatViewModel: No window available to present save panel")
+            return
+        }
+        
+        print("🔧 DEBUG: Found window: \(window.title)")
+                        print("🔧 DEBUG: About to present save panel")
+                let javascriptContent = javascriptToSave
+                print("🔧 DEBUG: JavaScript content length: \(javascriptContent.count)")
+                print("🔧 DEBUG: Calling beginSheetModal...")
+                savePanel.beginSheetModal(for: window) { [weak self] response in
+            print("🔧 DEBUG: Save panel response received: \(response.rawValue)")
             guard let self = self else { return }
             if response == .OK {
                 DispatchQueue.main.async {
@@ -277,6 +293,9 @@ public class ChatViewModel: ObservableObject {
             
             // Check if we should generate widget file
             await checkAndGenerateWidgetFile(from: response)
+            
+            // Check if a tool was called (for tool-based file generation)
+            await checkForToolCall(from: response)
             
             print("📝 ChatViewModel: Conversation history now has \(conversationHistory.count) messages")
         } else {
