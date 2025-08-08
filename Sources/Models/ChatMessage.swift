@@ -14,11 +14,11 @@ public struct ChatMessage: Identifiable {
     let timestamp: Date
     let structuredResponse: StructuredResponse?
     
-    init(content: String, isUser: Bool, timestamp: Date = Date()) {
+    init(content: String, isUser: Bool, timestamp: Date = Date(), disableStructuredContent: Bool = false) {
         self.content = content
         self.isUser = isUser
         self.timestamp = timestamp
-        self.structuredResponse = isUser ? nil : StructuredResponse(from: content)
+        self.structuredResponse = (isUser || disableStructuredContent) ? nil : StructuredResponse(from: content)
     }
     
     var hasStructuredContent: Bool {

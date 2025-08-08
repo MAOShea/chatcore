@@ -25,15 +25,17 @@ public class ChatViewModel: ObservableObject {
     private let aiService: any AIServiceProtocol
     private var lastSuccessfulSavePath: String?
     private let disableToolCallDetection: Bool
+    private let disableStructuredContent: Bool
     
     // MARK: - Widget State Management
     
     /// Current widget code/state
     @Published var currentWidgetCode: String = ""
     
-    public init(aiService: any AIServiceProtocol, disableToolCallDetection: Bool = false) {
+    public init(aiService: any AIServiceProtocol, disableToolCallDetection: Bool = false, disableStructuredContent: Bool = false) {
         self.aiService = aiService
         self.disableToolCallDetection = disableToolCallDetection
+        self.disableStructuredContent = disableStructuredContent
     }
     
     public init() {
@@ -128,6 +130,11 @@ public class ChatViewModel: ObservableObject {
 
     
     private func checkAndGenerateWidgetFile(from response: String) async {
+        if disableStructuredContent {
+            print("🔍 ChatViewModel: Structured content disabled, skipping JavaScript block detection")
+            return
+        }
+        
         print("🔍 ChatViewModel: Checking for JavaScript blocks in response")
         
         let structuredResponse = StructuredResponse(from: response)
@@ -280,15 +287,17 @@ public class ChatViewModel: ObservableObject {
         
         if let response = await aiService.sendMessage(input) {
             print("✅ ChatViewModel: AI response received, adding to conversation")
-            let aiMessage = ChatMessage(content: response, isUser: false, timestamp: Date())
+            let aiMessage = ChatMessage(content: response, isUser: false, timestamp: Date(), disableStructuredContent: disableStructuredContent)
             print("🔧 DEBUG: About to modify conversationHistory (sendToAI success)")
             DispatchQueue.main.async {
                 self.conversationHistory.append(aiMessage)
             }
             
             // Log structured content if found
-            if aiMessage.hasStructuredContent {
-                print("🎯 ChatViewModel: Found structured content: \(aiMessage.extractedContent ?? "nil")")
+            if !disableStructuredContent {
+                if aiMessage.hasStructuredContent {
+                    print("🎯 ChatViewModel: Found structured content: \(aiMessage.extractedContent ?? "nil")")
+                }
             }
             
             // Check if we should generate widget file
